@@ -1,0 +1,207 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import ArchitectureExplorer from '../components/ArchitectureExplorer';
+import { parts, chapters } from '../book.config';
+
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
+---
+
+<BaseLayout
+  title="Claude Code from Source — 架构、模式与内部机制"
+  description="一本分析 Anthropic AI 程式码代理架构的技术书籍。18 章、400 页，透过原始码映射逆向工程而成。不含原始码——只有可迁移的模式。"
+>
+  <Header />
+
+  <main class="max-w-4xl mx-auto px-4 md:px-8 py-12 md:py-20">
+
+    <!-- Hero -->
+    <div class="text-center mb-20">
+      <img
+        src={`${base}cover-zh-tw.jpg`}
+        alt="Claude Code from Source — 书籍封面"
+        class="mx-auto w-64 md:w-72 rounded-lg shadow-lg mb-10"
+      />
+      <h1 class="text-3xl md:text-4xl font-bold font-[var(--font-serif)] text-[var(--color-charcoal)] dark:text-[var(--color-cream)] mb-6 leading-tight">
+        Anthropic 如何打造最广泛使用的<br class="hidden md:inline" /> AI 程式码代理
+      </h1>
+      <p class="text-lg text-[var(--color-secondary)] dark:text-[var(--color-muted)] max-w-2xl mx-auto leading-relaxed mb-6">
+        当 Claude Code 发布到 npm 时，原始码映射也一并随附。我们读遍了每一个档案。本书将其中的架构、设计决策与可迁移的模式提炼为
+        <span class="text-[var(--color-terracotta)] font-medium">18 个章节</span>，让你能从中学习并应用到自己的系统。
+      </p>
+      <a
+        href={`${base}${chapters[0].slug}/`}
+        class="inline-flex items-center gap-2 px-6 py-3 bg-[var(--color-terracotta)] text-white font-medium rounded-lg hover:opacity-90 transition-opacity"
+      >
+        开始阅读
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </a>
+    </div>
+
+    <!-- What You'll Learn -->
+    <section class="mb-20">
+      <h2 class="text-2xl font-bold font-[var(--font-serif)] text-[var(--color-charcoal)] dark:text-[var(--color-cream)] mb-8">
+        你将学到什么
+      </h2>
+      <div class="grid md:grid-cols-2 gap-6">
+        {[
+          { title: '代理回圈', text: '一个 async generator 如何驱动整个系统——串流模型输出、执行工具、从错误中恢复，以及透过 4 层机制压缩上下文。' },
+          { title: '大规模工具执行', text: '从模型请求到工具结果的 14 步管线。权限解析、推测性执行、依安全分类进行的并发批次处理。' },
+          { title: '多代理协作', text: '子代理如何共享提示快取前缀以降低 95% 成本。分叉代理、协调者模式、具有信箱讯息传递的群集团队。' },
+          { title: '无资料库的记忆系统', text: '基于档案的记忆系统搭配 LLM 驱动的回忆机制。四种记忆类型、过期警告，以及一个优于嵌入搜寻的 Sonnet 侧查询。' },
+          { title: '效能工程', text: '透过平行 I/O 在 240ms 内启动。槽位保留机制在 99% 的请求中节省上下文。位图预过滤器用于模糊搜寻。每一毫秒都被精确管理。' },
+          { title: '扩充性与安全性', text: '两阶段技能载入（启动时载入元资料，呼叫时载入内容）。27 个生命周期钩子，启动时冻结设定快照以防止注入攻击。' },
+        ].map(({ title, text }) => (
+          <div class="p-5 rounded-lg border border-[var(--color-border)] dark:border-[#333]">
+            <h3 class="font-semibold text-[var(--color-charcoal)] dark:text-[var(--color-cream)] mb-2">{title}</h3>
+            <p class="text-sm text-[var(--color-secondary)] dark:text-[var(--color-muted)] leading-relaxed">{text}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Architecture Explorer -->
+    <section class="mb-20">
+      <h2 class="text-2xl font-bold font-[var(--font-serif)] text-[var(--color-charcoal)] dark:text-[var(--color-cream)] mb-3">
+        探索架构
+      </h2>
+      <p class="text-sm text-[var(--color-muted)] mb-6">
+        六个核心抽象构成了 Claude Code 的基础。拖曳节点重新排列，悬停查看细节，点击阅读对应章节。
+      </p>
+      <ArchitectureExplorer client:only="react" className="w-full" />
+    </section>
+
+    <!-- Who This Is For -->
+    <section class="mb-20">
+      <h2 class="text-2xl font-bold font-[var(--font-serif)] text-[var(--color-charcoal)] dark:text-[var(--color-cream)] mb-6">
+        本书适合谁
+      </h2>
+      <div class="space-y-4 text-[var(--color-secondary)] dark:text-[var(--color-muted)]">
+        <p><strong class="text-[var(--color-charcoal)] dark:text-[var(--color-cream)]">正在建构代理系统的工程师。</strong>每一章的结尾都有「实践应用」——5 个可迁移的模式，附带具体的调适建议。借用架构，避开错误。</p>
+        <p><strong class="text-[var(--color-charcoal)] dark:text-[var(--color-cream)]">评估架构的技术主管。</strong>跟著叙事走，不需要读完每一段程式码。理解决策背后的原因，而非仅了解建构了什么。</p>
+        <p><strong class="text-[var(--color-charcoal)] dark:text-[var(--color-cream)]">对正式环境 AI 工具运作方式感到好奇的人。</strong>Claude Code 被数十万开发者使用。这就是它底层的运作方式。</p>
+      </div>
+    </section>
+
+    <!-- Table of Contents -->
+    <section class="mb-20">
+      <h2 class="text-2xl font-bold font-[var(--font-serif)] text-[var(--color-charcoal)] dark:text-[var(--color-cream)] mb-8">
+        目录
+      </h2>
+      {parts.map((part) => {
+        const partChapters = chapters.filter(c => part.chapters.includes(c.number));
+        return (
+          <div class="mb-10">
+            <div class="flex items-baseline gap-3 mb-1">
+              <span class="text-xs font-semibold uppercase tracking-wider text-[var(--color-terracotta)]">第 {part.number} 部</span>
+              <h3 class="text-lg font-bold text-[var(--color-charcoal)] dark:text-[var(--color-cream)] font-[var(--font-serif)]">{part.title}</h3>
+            </div>
+            <p class="text-sm italic text-[var(--color-muted)] mb-4">{part.epigraph}</p>
+
+            <div class="space-y-2">
+              {partChapters.map((ch) => (
+                <a
+                  href={`${base}${ch.slug}/`}
+                  class="group flex items-start gap-3 p-3 -mx-3 rounded-lg hover:bg-[var(--color-beige)] dark:hover:bg-[var(--color-dark-surface)] transition-colors"
+                >
+                  <span class="text-sm font-mono text-[var(--color-muted)] mt-0.5 w-6 shrink-0 text-right">{ch.number}</span>
+                  <div>
+                    <span class="text-[var(--color-charcoal)] dark:text-[var(--color-cream)] group-hover:text-[var(--color-terracotta)] font-medium transition-colors">
+                      {ch.title}
+                    </span>
+                    <p class="text-sm text-[var(--color-muted)] mt-0.5">{ch.description}</p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </section>
+
+    <!-- How This Was Made -->
+    <section class="mb-20">
+      <h2 class="text-2xl font-bold font-[var(--font-serif)] text-[var(--color-charcoal)] dark:text-[var(--color-cream)] mb-6">
+        本书如何制作
+      </h2>
+      <div class="space-y-4 text-[var(--color-secondary)] dark:text-[var(--color-muted)] leading-relaxed">
+        <p>
+          原始码从 npm 的原始码映射中提取——随 Claude Code 一起发布的 <code>.js.map</code> 档案包含了一个 <code>sourcesContent</code> 栏位，内含完整的原始 TypeScript。近两千个档案构成了完整的架构。
+        </p>
+        <p>
+          <strong class="text-[var(--color-charcoal)] dark:text-[var(--color-cream)]">36 个 AI 代理</strong>分四个阶段分析并撰写了整本书：
+        </p>
+        <div class="grid sm:grid-cols-2 gap-4 my-6">
+          {[
+            { phase: '探索', detail: '6 个平行代理读遍原始码树中的每一个档案' },
+            { phase: '分析', detail: '12 个代理撰写了 494KB 的原始技术文件' },
+            { phase: '撰写', detail: '15 个代理从零开始将所有内容重写为叙事章节' },
+            { phase: '审阅与修订', detail: '3 位审阅者产出 900 行回馈意见；3 个代理套用了所有修正' },
+          ].map(({ phase, detail }) => (
+            <div class="flex gap-3 items-start p-4 rounded-lg bg-[var(--color-beige)]/50 dark:bg-[var(--color-dark-surface)]/50">
+              <span class="text-[var(--color-terracotta)] font-semibold text-sm shrink-0">{phase}</span>
+              <span class="text-sm">{detail}</span>
+            </div>
+          ))}
+        </div>
+        <p>
+          整个过程——从原始码提取到最终修订完成——大约花了 <strong class="text-[var(--color-charcoal)] dark:text-[var(--color-cream)]">6 小时</strong>。最终的审核确保没有任何逐字复制的原始码残留——每一个程式码区块都使用不同的变数名称重写为虚拟码。
+        </p>
+      </div>
+    </section>
+
+    <!-- 10 Patterns -->
+    <section class="mb-20">
+      <h2 class="text-2xl font-bold font-[var(--font-serif)] text-[var(--color-charcoal)] dark:text-[var(--color-cream)] mb-3">
+        让一切运作的 10 个模式
+      </h2>
+      <p class="text-[var(--color-muted)] mb-6">即使你什么都不读，也请看看这些定义了 Claude Code 的架构策略。</p>
+      <div class="space-y-4">
+        {[
+          { name: 'AsyncGenerator 作为代理回圈', desc: '产出 Messages、具型别的 Terminal 返回值、自然的背压与取消机制' },
+          { name: '推测性工具执行', desc: '在模型串流期间，于回应完成前就启动唯读工具' },
+          { name: '并发安全批次处理', desc: '依安全性分区工具，平行执行读取，序列化写入' },
+          { name: '分叉代理实现快取共享', desc: '平行子代理共享位元组完全相同的提示前缀，节省约 95% 的输入 token' },
+          { name: '4 层上下文压缩', desc: 'snip、microcompact、collapse、autocompact——每一层都比上一层更轻量' },
+          { name: '基于档案的记忆搭配 LLM 回忆', desc: 'Sonnet 侧查询选取相关记忆，而非关键字比对' },
+          { name: '两阶段技能载入', desc: '启动时仅载入前置资料，呼叫时才载入完整内容' },
+          { name: '黏性闩锁确保快取稳定性', desc: '一旦发送 beta 标头，在整个工作阶段中不再取消' },
+          { name: '槽位保留', desc: '预设 8K 输出上限，触及时提升至 64K（在 99% 的请求中节省上下文）' },
+          { name: '钩子设定快照', desc: '在启动时冻结，防止执行期注入攻击' },
+        ].map((p, i) => (
+          <div class="flex gap-4 items-start">
+            <span class="text-sm font-mono text-[var(--color-terracotta)] font-bold mt-1 w-6 shrink-0 text-right">{i + 1}</span>
+            <div>
+              <span class="font-semibold text-[var(--color-charcoal)] dark:text-[var(--color-cream)]">{p.name}</span>
+              <span class="text-[var(--color-secondary)] dark:text-[var(--color-muted)]"> — {p.desc}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Disclaimer -->
+    <section class="mb-12 p-6 rounded-lg border border-[var(--color-border)] dark:border-[#333] bg-[var(--color-beige)]/50 dark:bg-[var(--color-dark-surface)]/50">
+      <p class="text-sm text-[var(--color-secondary)] dark:text-[var(--color-muted)] leading-relaxed">
+        <strong class="text-[var(--color-charcoal)] dark:text-[var(--color-cream)]">纯教育用途。</strong>本书不包含 Claude Code 的任何原始码——每一个程式码区块都是为了说明架构模式而撰写的原创虚拟码。目标是帮助工程师理解正式环境 AI 代理的建构方式，而非重制专有软体。「NO'REILLY」封面纯属戏仿/迷因，仅供说明之用——与 O'Reilly Media 无任何关联。
+      </p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center text-sm text-[var(--color-muted)] border-t border-[var(--color-border)] dark:border-[#333] pt-8 pb-12">
+      <p>
+        本专案为 <a href="https://github.com/alejandrobalderas/claude-code-from-source" class="text-[var(--color-terracotta)] hover:underline" target="_blank" rel="noopener noreferrer">claude-code-from-source</a> 的中文翻译版。<br/>
+        感谢原文作者 <a href="https://github.com/alejandrobalderas" class="text-[var(--color-terracotta)] hover:underline" target="_blank" rel="noopener noreferrer">Alejandro Balderas</a> 的精彩贡献。
+      </p>
+      <p class="mt-4">
+        本站原始码：<a href="https://github.com/wellwind/claude-code-from-source-zh-tw" class="text-[var(--color-terracotta)] hover:underline" target="_blank" rel="noopener noreferrer">wellwind/claude-code-from-source-zh-tw</a>
+      </p>
+      <p class="mt-4">
+        独立的教育性分析。与 <a href="https://anthropic.com" class="text-[var(--color-terracotta)] hover:underline" target="_blank" rel="noopener noreferrer">Anthropic</a> 无任何关联、背书或赞助关系。
+      </p>
+    </footer>
+  </main>
+</BaseLayout>

@@ -1,0 +1,242 @@
+---
+/**
+ * Renders interactive diagrams for specific chapters.
+ * Each diagram targets a specific mermaid slot index in the chapter prose.
+ * A client-side script teleports the rendered components into those slots.
+ */
+import AgentLoopSimulator from './AgentLoopSimulator';
+import ArchitectureExplorer from './ArchitectureExplorer';
+import APICallLifecycle from './APICallLifecycle';
+import APIRequestFlow from './APIRequestFlow';
+import BootstrapFlowchart from './BootstrapFlowchart';
+import BootstrapTimeline from './BootstrapTimeline';
+import CompressionLayers from './CompressionLayers';
+import CoordinatorWorkflow from './CoordinatorWorkflow';
+import ErrorEscalation from './ErrorEscalation';
+import GoldenPath from './GoldenPath';
+import HookExecutionFlow from './HookExecutionFlow';
+import HookSnapshotSequence from './HookSnapshotSequence';
+import KairosMode from './KairosMode';
+import KeyParsingPipeline from './KeyParsingPipeline';
+import MCPTransports from './MCPTransports';
+import MemoryDirectoryStructure from './MemoryDirectoryStructure';
+import MemoryRecall from './MemoryRecall';
+import MultiProviderGraph from './MultiProviderGraph';
+import OAuthDiscoveryChain from './OAuthDiscoveryChain';
+import PermissionResolver from './PermissionResolver';
+import PromptCacheArchitecture from './PromptCacheArchitecture';
+import PromptCacheCalculator from './PromptCacheCalculator';
+import RenderingPipeline from './RenderingPipeline';
+import REPLComponentTree from './REPLComponentTree';
+import RemoteTopologies from './RemoteTopologies';
+import SendMessageRouter from './SendMessageRouter';
+import SetupGantt from './SetupGantt';
+import SkillsAndHooks from './SkillsAndHooks';
+import StateTwoTier from './StateTwoTier';
+import StreamingComparison from './StreamingComparison';
+import SubAgentTree from './SubAgentTree';
+import TaskStateMachine from './TaskStateMachine';
+import ToolLifecycle from './ToolLifecycle';
+import ToolPipeline from './ToolPipeline';
+import TrustBoundarySequence from './TrustBoundarySequence';
+import VimStateMachine from './VimStateMachine';
+
+interface Props {
+  chapterNumber: number;
+}
+
+const { chapterNumber } = Astro.props;
+
+interface DiagramEntry {
+  title: string;
+  description: string;
+  component: string;
+  slotIndex: number; // which mermaid block index this replaces
+}
+
+// Maps each interactive diagram to the mermaid block index it replaces.
+// Every slot must be covered — empty slots collapse via CSS :empty.
+const chapterDiagrams: Record<number, DiagramEntry[]> = {
+  1: [
+    { title: '六大关键抽象', description: '拖曳节点重新排列，悬停查看详情，点击阅读该章节。', component: 'ArchitectureExplorer', slotIndex: 0 },
+    { title: '黄金路径（Golden Path）', description: '观看从按键输入到输出的完整请求流程。', component: 'GoldenPath', slotIndex: 1 },
+    { title: '权限解析', description: '选择工具和权限模式，查看存取权限的解析方式。', component: 'PermissionResolver', slotIndex: 2 },
+    { title: '多供应商架构', description: '一个介面如何连接四个不同的 AI 供应商。', component: 'MultiProviderGraph', slotIndex: 3 },
+    { title: '各元件如何连接', description: '拖曳节点重新排列，悬停查看详情，点击阅读该章节。', component: 'ArchitectureExplorer', slotIndex: 4 },
+  ],
+  2: [
+    { title: '启动引导管线（Bootstrap Pipeline）', description: '五个档案依序执行，每个逐步缩小范围。', component: 'BootstrapFlowchart', slotIndex: 0 },
+    { title: '信任边界（Trust Boundary）', description: '信任边界建立前后发生了什么。', component: 'TrustBoundarySequence', slotIndex: 1 },
+    { title: '设定阶段', description: '设定阶段中的平行操作。', component: 'SetupGantt', slotIndex: 2 },
+    { title: '启动时间轴', description: '观看 Claude Code 如何透过平行化 I/O 在约 240ms 内完成启动。点击播放以启动动画。', component: 'BootstrapTimeline', slotIndex: 3 },
+  ],
+  3: [
+    { title: '黏性闪锁（Sticky Latches）', description: '探索 Bootstrap STATE 和 AppState 如何协同运作。试试黏性闪锁示范。', component: 'StateTwoTier', slotIndex: 0 },
+    { title: '双层架构', description: '观看资料如何在 Bootstrap STATE 和 AppState 之间流动。', component: 'StateTwoTier', slotIndex: 1 },
+  ],
+  4: [
+    { title: 'API 请求生命周期', description: '追踪从查询回圈到串流回应的完整 API 请求。', component: 'APIRequestFlow', slotIndex: 0 },
+    { title: '多供应商客户端工厂', description: '一个介面如何连接四个不同的 AI 供应商。', component: 'MultiProviderGraph', slotIndex: 1 },
+    { title: '系统提示架构', description: '探索快取最佳化的提示布局。切换功能查看影响。', component: 'APICallLifecycle', slotIndex: 2 },
+  ],
+  5: [
+    { title: '代理回圈（Agent Loop）', description: '逐步执行代理回圈的一次迭代。', component: 'AgentLoopSimulator', slotIndex: 0 },
+    { title: '上下文压缩', description: '套用每个压缩层并观看 token 减少。', component: 'CompressionLayers', slotIndex: 1 },
+    { title: '错误恢复', description: '触发错误并观看升级阶梯尝试恢复。', component: 'ErrorEscalation', slotIndex: 2 },
+  ],
+  6: [
+    { title: '工具执行管线', description: '将工具呼叫送入 14 步骤管线。', component: 'ToolPipeline', slotIndex: 0 },
+  ],
+  7: [
+    { title: '循序 vs 串流', description: '并排比较不同的执行策略。', component: 'StreamingComparison', slotIndex: 0 },
+    { title: '工具生命周期', description: '工具在执行期间经历的四个状态。', component: 'ToolLifecycle', slotIndex: 1 },
+  ],
+  8: [
+    { title: '子代理产生（Sub-Agent Spawning）', description: '产生不同代理类型，观看它们如何继承上下文和权限。', component: 'SubAgentTree', slotIndex: 0 },
+  ],
+  9: [
+    { title: '提示快取计算器', description: '计算分叉代理快取共享的节省量。', component: 'PromptCacheCalculator', slotIndex: -1 },
+  ],
+  10: [
+    { title: '任务状态机', description: '走过任务生命周期并探索通讯模式。', component: 'TaskStateMachine', slotIndex: 0 },
+    { title: '协调者工作流程', description: '协调者模式的四个阶段。', component: 'CoordinatorWorkflow', slotIndex: 1 },
+    { title: 'SendMessage 路由', description: '输入接收者并观看路由分派。', component: 'SendMessageRouter', slotIndex: 2 },
+  ],
+  11: [
+    { title: '记忆目录结构', description: '每个专案中记忆档案的组织方式。', component: 'MemoryDirectoryStructure', slotIndex: 0 },
+    { title: '记忆召回管线', description: '观看 LLM 驱动的召回如何选取相关记忆。', component: 'MemoryRecall', slotIndex: 1 },
+    { title: '标准模式 vs KAIROS 模式', description: '两种不同的记忆写入方式。', component: 'KairosMode', slotIndex: 2 },
+  ],
+  12: [
+    { title: '技能与钩子（Skills & Hooks）', description: '探索两阶段技能载入和钩子生命周期。', component: 'SkillsAndHooks', slotIndex: 0 },
+    { title: '钩子快照安全性', description: '设定快照如何防止执行时期注入攻击。', component: 'HookSnapshotSequence', slotIndex: 1 },
+    { title: '钩子执行流程', description: '钩子触发时的决策流程。', component: 'HookExecutionFlow', slotIndex: 2 },
+  ],
+  13: [
+    { title: '渲染管线', description: '观看画面帧通过 7 阶段管线的流程。', component: 'RenderingPipeline', slotIndex: 0 },
+    { title: 'REPL 元件树', description: '探索 5,000 行的元件阶层。', component: 'REPLComponentTree', slotIndex: 1 },
+  ],
+  14: [
+    { title: '按键解析管线', description: '选择一个按键并观看原始位元组转换为动作。', component: 'KeyParsingPipeline', slotIndex: 0 },
+    { title: 'Vim 状态机', description: '输入 vim 命令并观看状态转换。点击以聚焦。', component: 'VimStateMachine', slotIndex: 1 },
+  ],
+  15: [
+    { title: 'MCP 传输方式', description: '透过决策树探索 8 种传输类型。', component: 'MCPTransports', slotIndex: 0 },
+    { title: 'OAuth 探索链', description: 'MCP OAuth 的 RFC 9728 + RFC 8414 探索流程。', component: 'OAuthDiscoveryChain', slotIndex: 1 },
+  ],
+  16: [
+    { title: '远端执行拓扑', description: '四种远端控制 Claude Code 的系统。', component: 'RemoteTopologies', slotIndex: 0 },
+  ],
+  17: [
+    { title: '提示快取架构', description: '切换功能并调整对话长度以查看快取影响。', component: 'PromptCacheArchitecture', slotIndex: 0 },
+  ],
+};
+
+const diagrams = chapterDiagrams[chapterNumber] || [];
+
+// Separate: diagrams that target a slot vs ones that go at the bottom
+const slotDiagrams = diagrams.filter(d => d.slotIndex >= 0);
+const bottomDiagrams = diagrams.filter(d => d.slotIndex < 0);
+---
+
+{/* 将被传送到 mermaid 插槽的图表 */}
+{slotDiagrams.map((diagram) => (
+  <div class="diagram-source hidden" data-target-slot={diagram.slotIndex}>
+    <div class="my-8 p-5 rounded-xl border border-[var(--color-border)] dark:border-[#333]">
+      <div class="flex items-center gap-2 mb-1">
+        <svg class="w-4 h-4 text-[var(--color-terracotta)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        <h4 class="text-base font-semibold font-[var(--font-serif)] text-[var(--color-charcoal)] dark:text-[var(--color-cream)]">
+          {diagram.title}
+        </h4>
+      </div>
+      <p class="text-sm text-[var(--color-muted)] mb-4">{diagram.description}</p>
+
+      {diagram.component === 'AgentLoopSimulator' && <AgentLoopSimulator client:only="react" className="w-full" />}
+      {diagram.component === 'ArchitectureExplorer' && <ArchitectureExplorer client:only="react" className="w-full" />}
+      {diagram.component === 'APICallLifecycle' && <APICallLifecycle client:only="react" className="w-full" />}
+      {diagram.component === 'APIRequestFlow' && <APIRequestFlow client:only="react" className="w-full" />}
+      {diagram.component === 'BootstrapFlowchart' && <BootstrapFlowchart client:only="react" className="w-full" />}
+      {diagram.component === 'BootstrapTimeline' && <BootstrapTimeline client:only="react" className="w-full" />}
+      {diagram.component === 'CompressionLayers' && <CompressionLayers client:only="react" className="w-full" />}
+      {diagram.component === 'CoordinatorWorkflow' && <CoordinatorWorkflow client:only="react" className="w-full" />}
+      {diagram.component === 'ErrorEscalation' && <ErrorEscalation client:only="react" className="w-full" />}
+      {diagram.component === 'GoldenPath' && <GoldenPath client:only="react" className="w-full" />}
+      {diagram.component === 'HookExecutionFlow' && <HookExecutionFlow client:only="react" className="w-full" />}
+      {diagram.component === 'HookSnapshotSequence' && <HookSnapshotSequence client:only="react" className="w-full" />}
+      {diagram.component === 'KairosMode' && <KairosMode client:only="react" className="w-full" />}
+      {diagram.component === 'KeyParsingPipeline' && <KeyParsingPipeline client:only="react" className="w-full" />}
+      {diagram.component === 'MCPTransports' && <MCPTransports client:only="react" className="w-full" />}
+      {diagram.component === 'MemoryDirectoryStructure' && <MemoryDirectoryStructure client:only="react" className="w-full" />}
+      {diagram.component === 'MemoryRecall' && <MemoryRecall client:only="react" className="w-full" />}
+      {diagram.component === 'MultiProviderGraph' && <MultiProviderGraph client:only="react" className="w-full" />}
+      {diagram.component === 'OAuthDiscoveryChain' && <OAuthDiscoveryChain client:only="react" className="w-full" />}
+      {diagram.component === 'PermissionResolver' && <PermissionResolver client:only="react" className="w-full" />}
+      {diagram.component === 'PromptCacheArchitecture' && <PromptCacheArchitecture client:only="react" className="w-full" />}
+      {diagram.component === 'PromptCacheCalculator' && <PromptCacheCalculator client:only="react" className="w-full" />}
+      {diagram.component === 'RenderingPipeline' && <RenderingPipeline client:only="react" className="w-full" />}
+      {diagram.component === 'REPLComponentTree' && <REPLComponentTree client:only="react" className="w-full" />}
+      {diagram.component === 'RemoteTopologies' && <RemoteTopologies client:only="react" className="w-full" />}
+      {diagram.component === 'SendMessageRouter' && <SendMessageRouter client:only="react" className="w-full" />}
+      {diagram.component === 'SetupGantt' && <SetupGantt client:only="react" className="w-full" />}
+      {diagram.component === 'SkillsAndHooks' && <SkillsAndHooks client:only="react" className="w-full" />}
+      {diagram.component === 'StateTwoTier' && <StateTwoTier client:only="react" className="w-full" />}
+      {diagram.component === 'StreamingComparison' && <StreamingComparison client:only="react" className="w-full" />}
+      {diagram.component === 'SubAgentTree' && <SubAgentTree client:only="react" className="w-full" />}
+      {diagram.component === 'TaskStateMachine' && <TaskStateMachine client:only="react" className="w-full" />}
+      {diagram.component === 'ToolLifecycle' && <ToolLifecycle client:only="react" className="w-full" />}
+      {diagram.component === 'ToolPipeline' && <ToolPipeline client:only="react" className="w-full" />}
+      {diagram.component === 'TrustBoundarySequence' && <TrustBoundarySequence client:only="react" className="w-full" />}
+      {diagram.component === 'VimStateMachine' && <VimStateMachine client:only="react" className="w-full" />}
+    </div>
+  </div>
+))}
+
+{/* 没有插槽目标的图表放在底部 */}
+{bottomDiagrams.length > 0 && (
+  <div class="mt-12">
+    {bottomDiagrams.map((diagram) => (
+      <div class="mb-10 p-5 rounded-xl border border-[var(--color-border)] dark:border-[#333]">
+        <div class="flex items-center gap-2 mb-1">
+          <svg class="w-4 h-4 text-[var(--color-terracotta)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <h4 class="text-base font-semibold font-[var(--font-serif)] text-[var(--color-charcoal)] dark:text-[var(--color-cream)]">
+            {diagram.title}
+          </h4>
+        </div>
+        <p class="text-sm text-[var(--color-muted)] mb-4">{diagram.description}</p>
+
+        {diagram.component === 'PromptCacheCalculator' && <PromptCacheCalculator client:only="react" className="w-full" />}
+      </div>
+    ))}
+  </div>
+)}
+
+<script>
+  // Teleport diagram components from their hidden source containers into the
+  // matching .diagram-slot placeholders inside the chapter prose
+  function teleportDiagrams() {
+    const sources = document.querySelectorAll('.diagram-source[data-target-slot]');
+    sources.forEach((source) => {
+      const targetIndex = source.getAttribute('data-target-slot');
+      const slot = document.querySelector(`.diagram-slot[data-diagram-index="${targetIndex}"]`);
+      if (slot) {
+        // Move the content into the slot
+        slot.appendChild(source);
+        source.classList.remove('hidden');
+      } else {
+        // No matching slot — just show it where it is
+        source.classList.remove('hidden');
+      }
+    });
+  }
+
+  // Run after DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', teleportDiagrams);
+  } else {
+    teleportDiagrams();
+  }
+</script>
