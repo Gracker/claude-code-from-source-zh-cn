@@ -6,13 +6,13 @@
 > 本项目是 **Claude Code from Source** 的简体中文翻译版。
 >
 > - 原文：[alejandrobalderas/claude-code-from-source](https://github.com/alejandrobalderas/claude-code-from-source)（作者 [Alejandro Balderas](https://github.com/alejandrobalderas)）
-> - 翻译底本：[Gracker/claude-code-from-source-zh](https://github.com/Gracker/claude-code-from-source-zh)（繁体中文版）
+> - 翻译底本：[wellwind/claude-code-from-source-zh-tw](https://github.com/wellwind/claude-code-from-source-zh-tw)（繁体中文版）
 > - 本仓库在繁体中文版基础上进行简体中文本地化，包括术语统一（大陆技术写作规范）和语义意译。
 
 <p align="center">
   <img src="./web/public/cover-zh-tw.jpg" alt="Claude Code from Source — 书籍封面" width="400" />
   <br/><br/>
-  <a href="https://fullstackladder.dev/claude-code-from-source-zh-tw/"><strong>线上阅读：fullstackladder.dev/claude-code-from-source-zh-tw/</strong></a>
+  <strong>在线阅读：暂无，可直接在 <a href="https://github.com/Gracker/claude-code-from-source-zh-cn/tree/main/book">GitHub 仓库</a> 中逐章浏览</strong>
 </p>
 
 ---
@@ -56,7 +56,7 @@
 |---|------|----------|
 | 5 | [代理循环](./book/ch05-agent-loop.md) | query.ts 深入剖析、四层压缩、错误复原、token 预算 |
 | 6 | [工具——从定义到执行](./book/ch06-tools.md) | 工具接口、14 步管道、权限系统 |
-| 7 | [并行工具执行](./book/ch07-concurrency.md) | 分割演算法、流执行器、推测性执行 |
+| 7 | [并行工具执行](./book/ch07-concurrency.md) | 分割算法、流执行器、推测性执行 |
 
 ### 第三篇：多代理协作
 *一个代理很强大。多个代理协同运作则能带来变革。*
