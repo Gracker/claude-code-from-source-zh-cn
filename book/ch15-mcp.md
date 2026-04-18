@@ -2,7 +2,7 @@
 
 ## 为何 MCP 的意义超越 Claude Code
 
-本书其他每一章都在讨论 Claude Code 的内部机制。这一章不同。模型上下文协议（Model Context Protocol）是一个开放规格，任何代理都能实现，而 Claude Code 的 MCP 子系统是现存最完整的生产环境客户端之一。如果你正在构建一个需要调用外部工具的代理——任何代理、任何语言、任何模型——本章的模式可以直接套用。
+本书其他每一章都在讨论 Claude Code 的内部机制。这一章不同。模型上下文协议（Model Context Protocol）是一个开放规格，任何代理都能实现，而 Claude Code 的 MCP 子系统是现存最完整的生产环境客户端之一。如果你正在构建一个需要调用外部工具的代理——任何代理、任何语言、任何模型——本章的模式可以直接应用。
 
 核心命题很直接：MCP 定义了一个 JSON-RPC 2.0 协议，用于客户端（代理）与服务器（工具提供者）之间的工具发现与调用。客户端发送 `tools/list` 来发现服务器提供了什么，然后用 `tools/call` 来执行。服务器以名称、描述和 JSON Schema 输入参数来描述每个工具。这就是全部的契约。其他一切——传输层选择、认证、设置加载、工具名称规范化——都是将干净的规格变成能在现实世界中存活之物的实现工程。
 
@@ -63,11 +63,11 @@ MCP 服务器设置从七个范围加载，合并后去重：
 | `user` | `~/.claude.json` 的 mcpServers 字段 | 用户自行管理 |
 | `project` | 项目层级设置 | 共享的项目设置 |
 | `enterprise` | 受管企业设置 | 由组织预先核准 |
-| `managed` | 外挂提供的服务器 | 自动发现 |
+| `managed` | 插件提供的服务器 | 自动发现 |
 | `claudeai` | Claude.ai 网页接口 | 通过网页预先授权 |
 | `dynamic` | 运行时注入（SDK） | 以程序方式加入 |
 
-**去重是基于内容的，而非基于名称。** 两个名称不同但命令或 URL 相同的服务器会被识别为同一个服务器。`getMcpServerSignature()` 函数计算出一个正规键值：本地服务器为 `stdio:["command","arg1"]`，远端服务器为 `url:https://example.com/mcp`。外挂提供的服务器若其签名与手动设置匹配，则会被抑制。
+**去重是基于内容的，而非基于名称。** 两个名称不同但命令或 URL 相同的服务器会被识别为同一个服务器。`getMcpServerSignature()` 函数计算出一个正规键值：本地服务器为 `stdio:["command","arg1"]`，远端服务器为 `url:https://example.com/mcp`。插件提供的服务器若其签名与手动设置匹配，则会被抑制。
 
 ---
 
@@ -125,7 +125,7 @@ flowchart TD
 
 ## 进程内传输层
 
-不是每个 MCP 服务器都需要是独立进程。`InProcessTransport` 类别使 MCP 服务器和客户端可以在同一进程中执行：
+不是每个 MCP 服务器都需要是独立进程。`InProcessTransport` 类使 MCP 服务器和客户端可以在同一进程中执行：
 
 ```typescript
 class InProcessTransport implements Transport {
@@ -157,7 +157,7 @@ class InProcessTransport implements Transport {
 
 ### 会话过期侦测
 
-MCP 的流式 HTTP 传输层使用会话 ID。当服务器重新启动时，请求会返回 HTTP 404 并带有 JSON-RPC 错误码 -32001。`isMcpSessionExpiredError()` 函数检查这两个讯号——注意它使用字符串包含来侦测错误码，这务实但脆弱：
+MCP 的流式 HTTP 传输层使用会话 ID。当服务器重新启动时，请求会返回 HTTP 404 并带有 JSON-RPC 错误码 -32001。`isMcpSessionExpiredError()` 函数检查这两个信号——注意它使用字符串包含来侦测错误码，这务实但脆弱：
 
 ```typescript
 export function isMcpSessionExpiredError(error: Error): boolean {
@@ -191,17 +191,17 @@ MCP 的超时是分层的，每一层防护不同的失败模式：
 | 层级 | 持续时间 | 防护目标 |
 |------|----------|----------|
 | 连接 | 30 秒 | 无法到达或启动缓慢的服务器 |
-| 每次请求 | 60 秒（每次请求重新计时） | 过期超时讯号的程序缺陷 |
+| 每次请求 | 60 秒（每次请求重新计时） | 过期超时信号的程序缺陷 |
 | 工具调用 | 约 27.8 小时 | 合法的长时间操作 |
 | 认证 | 每次 OAuth 请求 30 秒 | 无法到达的 OAuth 服务器 |
 
-每次请求的超时值得强调。早期的实现在连接时建立单一的 `AbortSignal.timeout(60000)`。闲置 60 秒后，下一次请求会立即中止——因为讯号已经过期了。修正方式：`wrapFetchWithTimeout()` 为每次请求建立新的超时讯号。它还会规范化 `Accept` 请求头，作为防止运行时和代理服务器丢弃它的最后防线。
+每次请求的超时值得强调。早期的实现在连接时建立单一的 `AbortSignal.timeout(60000)`。闲置 60 秒后，下一次请求会立即中止——因为信号已经过期了。修正方式：`wrapFetchWithTimeout()` 为每次请求建立新的超时信号。它还会规范化 `Accept` 请求头，作为防止运行时和代理服务器丢弃它的最后防线。
 
 ---
 
 ## 实践应用：将 MCP 整合到你自己的代理中
 
-**从 stdio 开始，之后再增加复杂度。** `StdioClientTransport` 处理一切：产生进程、管道、终止。一行设置、一个传输类别，你就有了 MCP 工具。
+**从 stdio 开始，之后再增加复杂度。** `StdioClientTransport` 处理一切：产生进程、管道、终止。一行设置、一个传输类，你就有了 MCP 工具。
 
 **规范化名称并截断描述。** 名称必须匹配 `^[a-zA-Z0-9_-]{1,64}$`。加上 `mcp__{serverName}__` 前缀以避免冲突。描述上限为 2,048 个字符——否则 OpenAPI 产生的服务器会浪费上下文 token。
 

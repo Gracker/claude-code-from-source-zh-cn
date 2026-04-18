@@ -46,7 +46,7 @@
 
 **第二层：工具定义通过精确传递。**
 
-一般的子代理（Sub-Agent）会经过 `resolveAgentTools()`，它根据代理定义的 `tools` 和 `disallowedTools` 数组筛选工具池、套用权限模式差异，并可能重新排序工具。产生的序列化工具数组会与父代理的不同——不同的子集、不同的顺序、不同的权限标注。
+一般的子代理（Sub-Agent）会经过 `resolveAgentTools()`，它根据代理定义的 `tools` 和 `disallowedTools` 数组筛选工具池、应用权限模式差异，并可能重新排序工具。产生的序列化工具数组会与父代理的不同——不同的子集、不同的顺序、不同的权限标注。
 
 分叉代理完全跳过这些：
 
@@ -62,7 +62,7 @@ const resolvedTools = useExactTools
 
 这是 `buildForkedMessages()` 精心处理的部分。此函数构建位于共享历史和每个子代理指令之间的最后两则消息：
 
-`buildForkedMessages()` 函数构建位于共享历史和每个子代理指令之间的最后两则消息。演算法：
+`buildForkedMessages()` 函数构建位于共享历史和每个子代理指令之间的最后两则消息。算法：
 
 1. 复制父代理的助理消息（保留所有 `tool_use` 区块及其原始 ID）。
 2. 对每个 `tool_use` 区块，建立一个带有固定占位字符串的 `tool_result`（所有子代理完全相同）。
@@ -70,11 +70,11 @@ const resolvedTools = useExactTools
 4. 返回 `[clonedAssistantMessage, userMessageWithPlaceholdersAndDirective]`。
 
 ```typescript
-// 虚拟码——示意消息建构过程
+// 伪代码——示意消息建构过程
 function buildChildMessages(directive, parentAssistant) {
   const cloned = cloneMessage(parentAssistant)
   const placeholders = parentAssistant.toolUseBlocks.map(b =>
-    toolResult(b.id, CONSTANT_PLACEHOLDER)  // 所有子代理位元组相同
+    toolResult(b.id, CONSTANT_PLACEHOLDER)  // 所有子代理字节相同
   )
   const userMsg = createUserMessage([...placeholders, wrapDirective(directive)])
   return [cloned, userMsg]
@@ -138,28 +138,28 @@ if (effectiveType === undefined) {
 
 ## 同步到异步转换
 
-分叉子代理一开始在前景执行：它的消息流到父代理的终端，父代理阻塞等待完成。但如果子代理花太长时间呢？Claude Code 允许执行中转为背景——用户（或自动超时机制）可以将正在执行的前景代理推到背景，而不会遗失任何工作。
+分叉子代理一开始在前景执行：它的消息流到父代理的终端，父代理阻塞等待完成。但如果子代理花太长时间呢？Claude Code 允许执行中转为后台——用户（或自动超时机制）可以将正在执行的前景代理推到后台，而不会遗失任何工作。
 
 机制出乎意料地干净：
 
-1. 当前景代理通过 `registerAgentForeground()` 注册时，会建立一个背景信号 promise。
+1. 当前景代理通过 `registerAgentForeground()` 注册时，会建立一个后台信号 promise。
 
-2. 父代理的同步循环在代理的消息流和背景信号之间竞争：
+2. 父代理的同步循环在代理的消息流和后台信号之间竞争：
 
 ```
 while (true) {
   const result = await Promise.race([
     iterator.next(),         // 代理的下一则消息
-    backgroundSignal,        // 「移到背景」触发器
+    backgroundSignal,        // 「移到后台」触发器
   ])
   if (result === BACKGROUND_SIGNAL) break
   // ... 处理消息
 }
 ```
 
-3. 当背景信号触发时，前景迭代器通过 `iterator.return()` 优雅地终止。这会触发生成器的 `finally` 区块来处理清理工作。
+3. 当后台信号触发时，前景迭代器通过 `iterator.return()` 优雅地终止。这会触发生成器的 `finally` 区块来处理清理工作。
 
-4. 一个新的 `runAgent()` 实例以 `isAsync: true` 产生，使用相同的代理 ID 和截至目前累积的消息历史。代理从中断处继续，现在在背景执行。
+4. 一个新的 `runAgent()` 实例以 `isAsync: true` 产生，使用相同的代理 ID 和截至目前累积的消息历史。代理从中断处继续，现在在后台执行。
 
 5. 原本的同步 `call()` 返回 `{ status: 'async_launched' }`，父代理继续其对话。
 
@@ -167,15 +167,15 @@ while (true) {
 
 ---
 
-## 自动背景化
+## 自动后台化
 
-当 `CLAUDE_AUTO_BACKGROUND_TASKS` 环境变量或 `tengu_auto_background_agents` GrowthBook 标志启用时，前景代理会在 120 秒后自动被背景化：
+当 `CLAUDE_AUTO_BACKGROUND_TASKS` 环境变量或 `tengu_auto_background_agents` GrowthBook 标志启用时，前景代理会在 120 秒后自动被后台化：
 
-当通过环境变量或功能标志启用时，前景代理会在 120 秒后自动被背景化。禁用时，函数返回 0（不自动背景化）。
+当通过环境变量或功能标志启用时，前景代理会在 120 秒后自动被后台化。禁用时，函数返回 0（不自动后台化）。
 
 这是一个带有成本影响的用户体验决策。前景代理会阻塞父代理的终端——用户无法输入、无法发出新指令、无法产生其他代理。两分钟足够让代理同步完成大部分快速任务（此时流输出是有用的反馈），但又短到长时间执行的任务不会绑架终端。
 
-在分叉实验下，自动背景化问题是多余的：所有分叉产生的代理从一开始就强制异步。`run_in_background` 参数完全从 schema 中隐藏。每个分叉子代理都在背景执行，完成后通过 `<task-notification>` 回报，父代理永远不会阻塞。
+在分叉实验下，自动后台化问题是多余的：所有分叉产生的代理从一开始就强制异步。`run_in_background` 参数完全从 schema 中隐藏。每个分叉子代理都在后台执行，完成后通过 `<task-notification>` 回报，父代理永远不会阻塞。
 
 ---
 
@@ -238,7 +238,7 @@ while (true) {
 
 分叉代理模式的适用范围超越 Claude Code。任何从相同上下文派遣多个并行 LLM 调用的系统都能从缓存感知的请求构建中获益。原则如下：
 
-**1. 穿透传递已渲染的提示，不要重新计算。** 如果你的系统提示包含任何动态内容——功能标志、时间戳记、用户偏好、A/B 测试变体——捕获渲染结果并以值传递给子代理。重新计算有分歧的风险。
+**1. 穿透传递已渲染的提示，不要重新计算。** 如果你的系统提示包含任何动态内容——功能标志、时间戳、用户偏好、A/B 测试变体——捕获渲染结果并以值传递给子代理。重新计算有分歧的风险。
 
 **2. 冻结工具数组。** 如果你的子代理需要不同的工具集，你就放弃了工具区块上的缓存共享。考虑保留完整的工具集，使用运行时防护（像分叉样板中的「不要使用 Agent」）来代替编译时期的移除。
 
