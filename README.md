@@ -12,7 +12,7 @@
 <p align="center">
   <img src="./web/public/cover-zh-tw.jpg" alt="Claude Code from Source — 书籍封面" width="400" />
   <br/><br/>
-  <strong>在线阅读：暂无，可直接在 <a href="https://github.com/Gracker/claude-code-from-source-zh-cn/tree/main/book">GitHub 仓库</a> 中逐章浏览</strong>
+  <a href="https://gracker.github.io/claude-code-from-source-zh-cn/"><strong>在线阅读：gracker.github.io/claude-code-from-source-zh-cn</strong></a>
 </p>
 
 ---
