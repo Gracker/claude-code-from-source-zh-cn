@@ -3,7 +3,11 @@
 **Anthropic AI 编程代理的架构、模式与内部运作**
 
 > [!NOTE]
-> 本项目是 [claude-code-from-source](https://github.com/alejandrobalderas/claude-code-from-source) 的简体中文翻译版。感谢原文作者 [Alejandro Balderas](https://github.com/alejandrobalderas) 提供如此详尽且有启发性的研究与分析内容。
+> 本项目是 **Claude Code from Source** 的简体中文翻译版。
+>
+> - 原文：[alejandrobalderas/claude-code-from-source](https://github.com/alejandrobalderas/claude-code-from-source)（作者 [Alejandro Balderas](https://github.com/alejandrobalderas)）
+> - 翻译底本：[Gracker/claude-code-from-source-zh](https://github.com/Gracker/claude-code-from-source-zh)（繁体中文版）
+> - 本仓库在繁体中文版基础上进行简体中文本地化，包括术语统一（大陆技术写作规范）和语义意译。
 
 <p align="center">
   <img src="./web/public/cover-zh-tw.jpg" alt="Claude Code from Source — 书籍封面" width="400" />
