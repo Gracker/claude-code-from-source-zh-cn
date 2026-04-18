@@ -12,7 +12,7 @@
 <p align="center">
   <img src="./web/public/cover-zh-tw.jpg" alt="Claude Code from Source — 书籍封面" width="400" />
   <br/><br/>
-  <a href="https://gracker.github.io/claude-code-from-source-zh-cn/"><strong>在线阅读：gracker.github.io/claude-code-from-source-zh-cn</strong></a>
+  <a href="http://androidperformance.com/claude-code-from-source-zh-cn/"><strong>在线阅读：androidperformance.com/claude-code-from-source-zh-cn</strong></a>
 </p>
 
 ---
